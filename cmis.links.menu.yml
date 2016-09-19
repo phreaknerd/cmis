@@ -1,0 +1,8 @@
+# CMIS connection menu items definition
+entity.cmis_connection_entity.collection:
+  title: 'CMIS connection'
+  route_name: entity.cmis_connection_entity.collection
+  description: 'List CMIS connection (bundles)'
+  parent: system.admin_structure
+  weight: 99
+

@@ -1,0 +1,6 @@
+entity.cmis_connection_entity.add_form:
+  route_name: 'entity.cmis_connection_entity.add_form'
+  title: 'Add CMIS connection'
+  appears_on:
+    - entity.cmis_connection_entity.collection
+

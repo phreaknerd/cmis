@@ -1,57 +1,47 @@
-cmis.common.lib.check:
-  path: 'admin/settings/cmis/common'
+cmis.cmis_repository_controller_browser:
+  path: 'cmis/browser/{config}/{folder_id}'
   defaults:
-    _controller: '\Drupal\cmis\Controller\CommonController::checkClasses'
+    _controller: '\Drupal\cmis\Controller\CmisRepositoryController::browse'
+    config: ''
+    folder_id: ''
+    _title: 'CMIS Browser'
   requirements:
-    _permission: 'access cmis'
-cmis.repository:
-  path: '/cmis/browser'
+    _permission: 'access content'
+    
+cmis.cmis_browser_ajax_callback:
+  path: 'cmis/browser/ajax/{config}/{folder_id}'
   defaults:
-    _controller: '\Drupal\cmis\Controller\IndexController::getContent'
+    _controller: '\Drupal\cmis\CmisBrowser::ajaxCall'
+    config: ''
+    folder_id: ''
+    _title: 'CMIS Browser'
   requirements:
-    _permission: 'access cmis'
-cmis.delete:
-  path: '/cmis/delete'
-  defaults:
-    _form: '\Drupal\cmis\Form\CmisBrowserContentDeleteConfirmForm'
-    _title: 'Cmis Delete'
-  requirements:
-    _permission: 'access cmis'
-cmis.properties:
-  path: '/cmis/properties'
-  defaults:
-    _controller: '\Drupal\cmis\Controller\IndexController::contentProperties'
-  requirements:
-    _permission: 'access cmis'
-cmis.autocomplete:
-  path: '/cmis/autocomplete'
-  defaults:
-    _controller: '\Drupal\cmis\Controller\IndexController::browserAutocomplete'
-  requirements:
-    _permission: 'access cmis'
-cmis.tree:
-  path: '/cmis/tree'
-  defaults:
-    _controller: '\Drupal\cmis\Controller\IndexController::browserTree'
-  requirements:
-    _permission: 'access cmis'
-cmis.admin.browser:
-  path: '/admin/settings/cmis/browser'
-  defaults:
-    _form: '\Drupal\cmis\Form\CmisBrowserSettingsForm'
-  requirements:
-    _permission: 'administer cmis'
-cmis.query:
-  path: 'cmis/query'
-  defaults:
-    _form: '\Drupal\cmis\Form\QueryForm'
-    _title: 'CMIS Query '
-  requirements:
-    _permission: 'access cmis'
-cmis.dev.info:
-  path: 'admin/cmis/info'
-  defaults:
-    _controller: '\Drupal\cmis\Controller\DevController::cmis_dev_info'
-  requirements:
-    _permission: 'access cmis'
+    _permission: 'access content'
 
+cmis.cmis_document_get_callback:
+  path: 'cmis/document/{config}/{document_id}'
+  defaults:
+    _controller: '\Drupal\cmis\CmisBrowser::getDocument'
+    config: ''
+    document_id: ''
+    _title: 'CMIS Browser'
+  requirements:
+    _permission: 'access content'
+
+cmis.cmis_object_properties_callback:
+  path: '/cmis/object-properties/{config}/{document_id}'
+  defaults:
+    _controller: '\Drupal\cmis\Controller\CmisRepositoryController::getProperties'
+    config: ''
+    document_id: ''
+    _title: 'Document properties'
+  requirements:
+    _permission: 'access content'
+
+cmis.cmis_query_form_callback:
+  path: '/cmis/query'
+  defaults:
+    _form: '\Drupal\cmis\Form\CmisQueryForm'
+    _title: 'CMIS query'
+  requirements:
+    _permission: 'access content'

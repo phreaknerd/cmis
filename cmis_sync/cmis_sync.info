@@ -1,5 +1,0 @@
-name = CMIS Sync
-description = Provides synchronization with other CMIS repositories 
-package = CMIS
-dependencies[] = cmis
-core = "7.x"

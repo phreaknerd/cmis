@@ -1,0 +1,25 @@
+cmis.cmis_connection_entity.*:
+  type: config_entity
+  label: 'CMIS connection config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string  
+    cmis_url:
+      type: string
+      label: 'CMIS url'
+    cmis_user:
+      type: string
+      label: 'CMIS user name'
+    cmis_password:
+      type: password
+      label: 'CMIS password'
+    cmis_repository:
+      type: int
+      label: 'CMIS repository'
+        

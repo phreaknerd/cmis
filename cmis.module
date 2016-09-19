@@ -2,334 +2,154 @@
 
 /**
  * @file
- * Returns a CMIS repository properties, based on local configuration.
+ * Contains cmis.module..
  */
-
-use Drupal\cmis\CMISException;
-use Drupal\cmis\CommonCmisService;
-use Drupal\Core\Entity\EntityInterface;
-
-function cmis_get_repository($id_or_alias = NULL) {
-  static $repositories_cache;
-  $cmis_repository = NULL;
-
-  if(empty($id_or_alias)) {
-    global $user;
-    $id_or_alias = isset($user->cmis_repository)?$user->cmis_repository:'default';
-  }
-
-  // Init repository cache.
-  if (is_null($repositories_cache)) {
-    $repositories_cache = array();
-  }
-
-  // Lookup repository in cache.
-  if (array_key_exists($id_or_alias, $repositories_cache)) {
-    $cmis_repository = $repositories_cache[$id_or_alias];
-  }
-  else {
-
-    $config_cmis_repos = \Drupal::config('cmis.settings')->get('cmis_repositories');
-
-    if (array_key_exists($id_or_alias, $config_cmis_repos)) {
-
-      // Setup temp repository details.
-      $cmis_repository = new stdClass();
-      $repositories_cache[$id_or_alias] = $cmis_repository;
-
-      // Setup repository settings.
-      $cmis_repository->settings = $config_cmis_repos[$id_or_alias];
-
-      // Merge in defaults.
-      $cmis_repository->settings += array('transport' => 'cmis');
-
-      // Init cmis repository.
-      $cmis_repository->info = cmisapi_getRepositoryInfo($id_or_alias);
-      $cmis_repository->repositoryId = $cmis_repository->info->repositoryInfo['cmis:repositoryId'];
-
-      // Save repository description in cache.
-      $repositories_cache[$cmis_repository->repositoryId] = & $repositories_cache[$id_or_alias];
-    }
-    else {
-      throw new CMISException(t('Unable to lookup CMIS repository [@cmis_id_or_alias]', array('@cmis_id_or_alias' => $id_or_alias)));
-    }
-  }
-
-  return $cmis_repository;
-}
+use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
- * Implementation of hook_cmisapi_invoke().
+ * Implements hook_help().
  */
-function cmis_invoke($repositry_id, $url = '', $properties = array()) {
-  // Merge in defaults.
-  $properties += array(
-    'headers' => array(),
-    'method' => 'GET',
-    'data' => NULL,
-    'retry' => 3
-  );
+function cmis_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the cmis module.
+    case 'help.page.cmis':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('CMIS implementation for interacting with a CMIS compliant repository') . '</p>';
+      return $output;
 
-  $cmis_repository = cmis_get_repository((string) $repositry_id);
-
-  // If the configuration array has specified a transport, then we should use
-  // that and not look for modules implementing cmis_invoke.
-  $cmis_transport = $cmis_repository->settings['transport'];
-
-  // If the default is in use, check that another module isn't implementing
-  // cmis_invoke.
-  if ($cmis_transport == 'cmis'){
-    foreach (\Drupal::moduleHandler()->getImplementations('cmis_invoke') as $module) {
-
-      // Determine which module to use and change the cmis_transport mechanism
-      // from the default set in cmis_get_repository.
-      if($module != $cmis_transport){
-	    $cmis_transport = $module;
-	    break;
-      }
-    }
-  }
-
-  // Invoke hook_cmis().
-  if (Drupal::moduleHandler()->moduleExists($cmis_transport)) {
-    $cmis_settings['url']=$url;
-    $cmis_settings['properties']=$properties;
-    $cmis_settings['cmis_repository']=$cmis_repository->settings;
-
-    return \Drupal::moduleHandler()->invoke($cmis_transport, 'cmis_invoke', array($cmis_settings));
-  }
-  else {
-    throw new CMISException(t('Unable to lookup CMIS transport [@cmis_transport] for [@cmis_id_or_alias]',
-      array(
-        '@cmis_id_or_alias' => $repositry_id,
-        '@cmis_transport' => $cmis_transport)
-      )
-    );
+    default:
   }
 }
 
 /**
- * Utility function that returns all known vendors.
- *
- * @return array
- *   Array of vendors.
+ * Implements hook_theme().
  */
-function cmis_get_vendors() {
-  $vendors = array();
-  $info_array =  Drupal::moduleHandler()->invokeAll('cmis_info');
-  foreach ($info_array as $type => $info) {
-    $info['type'] = $type;
-    $vendors[$type] = $info;
-  }
-  return $vendors;
-}
-
-/**
- * Utility function used to call a CMIS method, using the CMIS vendor selected
- * in config.
- *
- * @return mixed.
- */
-function cmis_vendor_invoke() {
-  if(!$vendor = \Drupal::config('cmis.settings')->get('cmis_vendor')) {
-    $vendor = 'cmis';
-  }
-
-  $args = func_get_args();
-  $cmis_method = $args[0];
-
-  $vendors = cmis_get_vendors();
-
-  if (array_key_exists($vendor, $vendors)) {
-    if (function_exists($vendor .'_cmisapi_invoke')) {
-      return call_user_func_array($vendor .'_cmisapi_invoke', $args);
-    }
-    else {
-      unset($args[0]);
-      $function = $vendor .'_cmisapi_'. $cmis_method;
-      if (function_exists($function)) {
-        return call_user_func_array($function, $args);
-      }
-      throw new CMISException(t('@function not implemented by @vendor CMIS vendor', array('@function' => $function, '@vendor' => $vendor)));
-    }
-  }
-  throw new CMISException(t('Unknown CMIS vendor: @vendor', array('@vendor' => $vendor)));
-}
-
-/**
- * Implementation of hook_cmis_info()
- */
-function cmis_cmis_info() {
+function cmis_theme() {
   return array(
-    'cmis' => array(
-    'name' => t('CMIS Common'),
-    'module' => 'cmis',
-    'description' => t('CMIS common client')
-    )
+    'cmis_browser_folder_item' => array(
+      'variables' => array('element' => NULL),
+      'template' => 'cmis-browser-folder-item',
+    ),
+    'cmis_browser_document_item' => array(
+      'variables' => array(
+        'element' => NULL,
+        'mime_type' => NULL,
+        'title' => NULL,
+      ),
+      'template' => 'cmis-browser-document-item',
+    ),
+    'cmis_browser_other_item' => array(
+      'variables' => array('element' => NULL),
+      'template' => 'cmis-browser-other-item',
+    ),
+    'cmis_browser_document_details' => [
+      'variables' => array(
+        'title' => NULL,
+        'mime_type' => NULL,
+        'size' => NULL,
+      ),
+      'template' => 'cmis-browser-details',
+    ],
+    'cmis_browser' => array(
+      'variables' => [
+        'elements' => NULL,
+        'header' => NULL,
+        'breadcrumbs' => NULL,
+      ],
+      'template' => 'cmis-browser',
+    ),
+    'cmis_content_properties' => array(
+      'variables' => [
+        'object' => NULL,
+        'download' => NULL,
+      ],
+      'template' => 'cmis-content-properties',
+    ),
   );
 }
 
 /**
- * Implementation of hook_cmisapi_invoke().
+ * Template preprocess for cmis browser.
+ * 
+ * @param type $variables
  */
-function cmis_cmisapi_invoke() {
-    $args = func_get_args();
-    $cmis_method = $args[0];
-    $repository_id = (count($args) > 1) ? $args[1] : 'default';
+function template_preprocess_cmis_browser(&$variables) {
+  if (!empty($variables['elements'])) {
+    $breadcrumbs = [
+      '#theme' => 'item_list',
+      '#items' => $variables['breadcrumbs'],
+      '#type' => 'ul',
+    ];
 
-    unset($args[0]);
-    unset($args[1]);
+    $variables['breadcrumbs'] = render($breadcrumbs);
 
-    $cmis_repository = cmis_get_repository($repository_id);
+    $table = array(
+      '#theme' => 'table',
+      '#header' => $variables['header'],
+      '#rows' => $variables['elements'],
+    );
 
-    // Pass repository info from cache.
-    if ($cmis_method == 'getRepositoryInfo' && isset($cmis_repository->info)) {
-        return $cmis_repository->info;
-    }
-
-
-    // Cache service instance.
-    if (!isset($cmis_repository->service)) {
-
-        module_load_include('utils.inc', 'cmis');
-
-        // CommonCMISService allows other modules to control the way
-        // CMISService class calls the CMIS repositories via hook_cmis_invoke().
-        $cmis_repository->service = new CommonCMISService($cmis_repository->settings['url'],
-            isset($cmis_repository->settings['user']),
-            isset($cmis_repository->settings['password']));
-    }
-
-    return call_user_func_array(array($cmis_repository->service, $cmis_method), $args);
-}
-
-/**
- * Implementation of hook_cmis_invoke().
- */
-function cmis_cmis_invoke($cmis_settings) {
-  $url = $cmis_settings['url'];
-  $properties = $cmis_settings['properties'];
-  $dry_run = $cmis_settings['dry_run'];
-  $settings = $cmis_settings['cmis_repository'];
-
-  if($cmis_settings['url']=="") {
-    $url = $cmis_settings['cmis_repository']['url'];
-  }
-
-  $session = curl_init($url);
-
-  curl_setopt($session, CURLOPT_HEADER, false);
-  curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
-
-  if ($settings['user']) {
-    curl_setopt($session, CURLOPT_USERPWD, $settings['user'] . ":" . $settings['password']);
-  }
-
-  curl_setopt($session, CURLOPT_CUSTOMREQUEST, $properties['method']);
-
-  if ($properties['headers']) {
-    $headers = array();
-
-    foreach($properties['headers'] as $header_name => $header_value) {
-      $headers[] = $header_name .': '. $header_value;
-    }
-
-    curl_setopt($session, CURLOPT_HTTPHEADER, $headers);
-  }
-
-  if ($properties['data']) {
-    curl_setopt($session, CURLOPT_POSTFIELDS, $properties['data']);
-  }
-
-  if ($properties['method'] == "POST") {
-    curl_setopt($session, CURLOPT_POST, true);
-  }
-
-  $retval = new stdClass();
-  $retval->url = $url;
-  $retval->method = $properties['method'];
-  $retval->content_sent = $properties['data'];
-  $retval->content_type_sent = $properties['headers']['Content-Type'];
-
-  if (!$dry_run) {
-    $retval->body = curl_exec($session);
-    $retval->code = curl_getinfo($session, CURLINFO_HTTP_CODE);
-    $retval->content_type = curl_getinfo($session, CURLINFO_CONTENT_TYPE);
-    $retval->content_length = curl_getinfo($session, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-    curl_close($session);
-
-    if (!in_array($retval->code, array(200,201,204))) {
-
-      throw new CMISException(t("HTTP call to [@url] returned [@code]. Response: @response", array(
-        '@code' => $retval->code,
-        '@response' => strip_tags($retval->body),
-        '@url' => $url
-      )));
-    }
-  }
-  else {
-    $retval->body = NULL;
-    $retval->curl_session = $session;
-    $retval->code = 0;
-    $retval->content_type = NULL;
-    $retval->content_length = NULL;
-  }
-
-  return $retval;
-}
-
-/**
- * Implements hook_ENTITY_TYPE_insert() for node entities.
- */
-function cmis_node_insert(EntityInterface $node) {
-  if (!isset($node->cmis_disabled)) {
-    module_load_include('drupal.inc', 'cmis');
-    try {
-      _cmis_drupal_cmis_update($node, 'insert');
-    }
-    catch (CMISException $e) {
-      cmis_error_handler('cmis_nodeapi', $e);
-    }
+    $variables['table'] = render($table);
   }
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update() for node entities.
- */
-function cmis_node_update(EntityInterface $node) {
-  if (!isset($node->cmis_disabled)) {
-    module_load_include('drupal.inc', 'cmis');
-    try {
-      _cmis_drupal_cmis_update($node, 'update');
-    }
-    catch (CMISException $e) {
-      cmis_error_handler('cmis_nodeapi', $e);
-    }
-  }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_delete() for node entities.
- */
-function cmis_node_delete(EntityInterface $node) {
-  if (!isset($node->cmis_disabled)) {
-    module_load_include('drupal.inc', 'cmis');
-    try {
-      _cmis_drupal_cmis_update($node, 'delete');
-    }
-    catch (CMISException $e) {
-      cmis_error_handler('cmis_nodeapi', $e);
-    }
-  }
-}
-
-/**
- * Utility for handling CMIS errors.
+ * Template preprocess for content properties.
  *
- * @param $e Exception
+ * @param type $variables
  */
-function cmis_error_handler($type, $e) {
-  \Drupal::logger($type)->error($e->getMessage());
-  drupal_set_message(t("There has been an problem contacting the CMIS server, please see the logs."), 'error');
+function template_preprocess_cmis_content_properties(&$variables) {
+  $object = $variables['object'];
+  $rows = [];
+  foreach ($object->getProperties() as $key => $property) {
+    if ($property) {
+      $rows[] = [$key, _cmis_get_property($key, $property)];
+    }
+  }
+
+  $variables['properties'] = '';
+  if (!empty($rows)) {
+    $table = [
+      '#theme' => 'table',
+      '#header' => [t('Property'), t('Value')],
+      '#rows' => $rows,
+    ];
+    $variables['properties'] = render($table);
+  }
 }
 
+/**
+ * Get configuration entity to private variable.
+ */
+function cmis_get_configurations() {
+  $storage = \Drupal::entityTypeManager()->getStorage('cmis_connection_entity');
+  $configs = $storage->loadMultiple();
+  $options = array('_none' => t('None'));
+  foreach ($configs as $key => $config) {
+    $options[$key] = $config->get('label');
+  }
+
+  return $options;
+}
+
+/**
+ * 
+ * @param type $key
+ * @param type $property
+ * @return string
+ */
+function _cmis_get_property($key, $property) {
+  $values = $property->getValues();
+  if (!empty($values)) {
+    foreach ($values as &$value) {
+      if (!empty($value) &&
+          ($key == 'cmis:creationDate' || $key == 'cmis:lastModificationDate')) {
+        $value = $value->format(\DateTime::ATOM);
+      }
+    }
+    return implode(', ', $values);
+  }
+  
+  return '';
+}

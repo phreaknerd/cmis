@@ -1,6 +1,0 @@
-name = CMIS Dev
-description = Provides CMIS developer tools  
-package = CMIS
-dependencies[] = cmis
-core = "7.x"
-project = "cmis"
