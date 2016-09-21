@@ -22,4 +22,6 @@ cmis.cmis_connection_entity.*:
     cmis_repository:
       type: int
       label: 'CMIS repository'
-        
+    cmis_cacheable:
+      type: boolean
+      label: 'CMIS cacheable'

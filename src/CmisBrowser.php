@@ -65,18 +65,18 @@ class CmisBrowser {
   /**
    * Popup.
    *
-   * @var type
+   * @var boolean
    *    the browser popup flag 
    */
   protected $popup;
 
   /**
-   * Base type id.
-   * 
-   * @var string
-   *    the object base type id
+   * Cacheable.
+   *
+   * @var boolean
+   *    the browser cacheable flag
    */
-  protected $baseTypeId = 'cmis:folder';
+  protected $cacheable;
 
   /**
    * Constructing the object.
@@ -89,7 +89,6 @@ class CmisBrowser {
       $this->init($config, $folder_id);
     }
   }
-
 
   /**
    * Call from ajaxify url.
@@ -123,6 +122,7 @@ class CmisBrowser {
         $content = $this->current->getContentStream($id);
       }
       catch (CMISException $e) {
+        // TODO: testing this.
         $headers = ['' => 'HTTP/1.1 503 Service unavailable'];
         $response = new Response($content, 503, $headers);
         $response->send();
@@ -171,17 +171,23 @@ class CmisBrowser {
   /**
    * Init variables.
    *
-   * @param type $config
-   * @param type $folder_id
+   * @param string $config
+   * @param string $folder_id
    */
-  private function init($config, $folder_id, $type = 'cmis:folder') {
+  private function init($config, $folder_id) {
     $this->config = $config;
     $this->folder_id = $folder_id;
     $this->connection = new CmisConnectionApi($this->config);
+    //$cacheable = $this->connection->getConfig()->getCmisCacheable();
+    // TODO: find out the best cache options.
+    //$cache_parameters = [
+    //  'contexts' => ['user'],
+    //  'max-age' => $cacheable ? 300 : 0,
+    //];
+    //$this->cacheable = $cache_parameters;
     if (!empty($this->connection->getHttpInvoker())) {
       $popup = \Drupal::request()->query->get('type');
       $this->popup = ($popup == 'popup');
-      $this->baseTypeId = \Drupal::request()->query->get('cmis_base_type_id');
       $this->connection->setDefaultParameters();
 
       if (empty($this->folder_id)) {
@@ -190,9 +196,6 @@ class CmisBrowser {
         $this->current = $root_folder;
       }
       else {
-        if (!empty($this->baseTypeId)) {
-          $type = $this->baseTypeId;
-        }
         $this->current = $this->connection->getObjectById($this->folder_id);
       }
     }
@@ -222,10 +225,8 @@ class CmisBrowser {
    * @return array
    *   Return cmis browser render array.
    */
-  public function browse() {
+  public function browse($reset = FALSE) {
     if ($this->connection && !empty($this->current)) {
-      $type_id = $this->current->getBaseTypeId()->__toString();
-      $name = $this->current->getName();
 
       $this->setBreadcrumbs($this->current);
       $this->printFolderContent($this->current);
@@ -239,12 +240,15 @@ class CmisBrowser {
         t('Operation'),
       );
 
-      return array(
+      $browse = [
         '#theme' => 'cmis_browser',
         '#header' => $table_header,
         '#elements' => $this->data,
         '#breadcrumbs' => $this->breadcrumbs,
-      );
+        //'#cache' => $this->cacheable,
+      ];
+
+      return $browse;
     }
 
     return [];
@@ -287,6 +291,7 @@ class CmisBrowser {
           $element = [
             '#theme' => 'cmis_browser_other_item',
             '#element' => $name,
+            //'#cache' => $this->cacheable,
           ];
           $this->data[] = [render($element)];
       }
@@ -348,10 +353,6 @@ class CmisBrowser {
             'width' => 700
           ]),
         ),
-        'query' => [
-          'cmis_base_type_id' => $children->getBaseTypeId()->__toString(),
-          'process' => 'documentProperties',
-        ],
       );
       $url->setOptions($link_options);
       $path = \Drupal\Core\Link::fromTextAndUrl(t('Properties'), $url)->toRenderable();
@@ -361,6 +362,7 @@ class CmisBrowser {
     $element = [
       '#theme' => $theme,
       '#element' => $data,
+      //'#cache' => $this->cacheable,
     ];
 
     $details = [
@@ -368,6 +370,7 @@ class CmisBrowser {
       '#title' => $title,
       '#mime_type' => $mime_type,
       '#size' => number_format($size, 0, '', ' '),
+      //'#cache' => $this->cacheable,
     ];
 
     $this->data[] = [

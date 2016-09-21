@@ -88,6 +88,13 @@ class CmisConnectionEntity extends ConfigEntityBase implements CmisConnectionEnt
   protected $cmis_repository;
   
   /**
+   * The CMIS repository cacheable flag.
+   *
+   * @var boolean
+   */
+  protected $cmis_cacheable;
+
+  /**
    * Get CMIS url.
    *
    * @return string
@@ -121,6 +128,15 @@ class CmisConnectionEntity extends ConfigEntityBase implements CmisConnectionEnt
    */
   public function getCmisRepository() {
     return $this->cmis_repository;
+  }
+
+  /**
+   * Get CMIS repository cacheable flag.
+   *
+   * @return boolean
+   */
+  public function getCmisCacheable() {
+    return $this->cmis_cacheable;
   }
 
 }

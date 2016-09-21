@@ -12,7 +12,20 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class CmisQueryForm extends FormBase {
 
+  /**
+   * Configuration.
+   *
+   * @var string
+   *    the configuration id
+   */
   protected $config;
+
+  /**
+   * Connection.
+   *
+   * @var object
+   *    the connection object
+   */
   protected $connection;
 
   /**
@@ -51,7 +64,6 @@ class CmisQueryForm extends FormBase {
       '#ajax' => array(
         'callback' => '::ajaxGetResult',
         'wrapper' => 'query-result-wrapper',
-        //'event' => 'click',
       ),
     ];
 
@@ -81,14 +93,16 @@ class CmisQueryForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    //$form_state->setRebuild(TRUE);
+
   }
 
   /**
-   * 
-   * @param type $config
-   * @param type $query
-   * @return array
+   * Execute query string.
+   *
+   * @param string $config
+   * @param string $query
+   *
+   * @return string
    */
   public function queryExec($config = '', $query = '') {
     $content = '';
@@ -112,9 +126,11 @@ class CmisQueryForm extends FormBase {
   }
   
   /**
-   * 
-   * @param type $results
-   * @return type
+   * Prepare results to rendered table.
+   *
+   * @param array $results
+   *
+   * @return string
    */
   private function prepareResult($results) {
     $content = '';
@@ -146,9 +162,11 @@ class CmisQueryForm extends FormBase {
   }
   
   /**
-   * 
+   * Submit button ajax callback.
+   *
    * @param array $form
    * @param FormStateInterface $form_state
+   *
    * @return array
    */
   public function ajaxGetResult(array &$form, FormStateInterface $form_state) {

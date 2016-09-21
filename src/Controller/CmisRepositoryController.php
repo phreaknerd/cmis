@@ -30,7 +30,8 @@ class CmisRepositoryController extends ControllerBase {
    */
   public function browse($config = '', $folder_id = '') {
     $this->initBrowser($config, $folder_id);
-    return $this->browser->browse();
+    $cacheable = $this->browser->getConnection()->getConfig()->getCmisCacheable();
+    return $this->browser->browse(!$cacheable);
   }
   
   public function getProperties($config = '', $document_id = '') {

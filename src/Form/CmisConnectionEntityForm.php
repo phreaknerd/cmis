@@ -17,6 +17,7 @@ use Drupal\Core\Form\FormStateInterface;
  * @package Drupal\cmis\Form
  */
 class CmisConnectionEntityForm extends EntityForm {
+
   /**
    * {@inheritdoc}
    */
@@ -41,7 +42,7 @@ class CmisConnectionEntityForm extends EntityForm {
       ),
       '#disabled' => !$cmis_connection_entity->isNew(),
     );
-    
+
     $form['cmis_url'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('CMIS browser url'),
@@ -50,7 +51,7 @@ class CmisConnectionEntityForm extends EntityForm {
       '#description' => $this->t("Enter CMIS browser url."),
       '#required' => TRUE,
     );
-    
+
     $form['cmis_user'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('CMIS user'),
@@ -59,7 +60,7 @@ class CmisConnectionEntityForm extends EntityForm {
       '#description' => $this->t("Enter CMIS user name."),
       '#required' => TRUE,
     );
-    
+
     $form['cmis_password'] = array(
       '#type' => 'password',
       '#title' => $this->t('CMIS password'),
@@ -68,7 +69,7 @@ class CmisConnectionEntityForm extends EntityForm {
       '#description' => $this->t("Enter CMIS password."),
       '#required' => TRUE,
     );
-    
+
     $form['cmis_repository'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('CMIS repository id'),
@@ -77,9 +78,14 @@ class CmisConnectionEntityForm extends EntityForm {
       '#description' => $this->t("Enter CMIS repository id. If empty the first repository will be used"),
       '#required' => FALSE,
     );
-    
-    /* You will need additional form elements for your custom properties. */
 
+    $form['cmis_cacheable'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('CMIS cacheable'),
+      '#default_value' => $cmis_connection_entity->getCmisCacheable(),
+      '#description' => $this->t("Check if repository will be cacheable"),
+      '#required' => FALSE,
+    );
     return $form;
   }
 
@@ -93,13 +99,13 @@ class CmisConnectionEntityForm extends EntityForm {
     switch ($status) {
       case SAVED_NEW:
         drupal_set_message($this->t('Created the %label CMIS connection.', [
-          '%label' => $cmis_connection_entity->label(),
+              '%label' => $cmis_connection_entity->label(),
         ]));
         break;
 
       default:
         drupal_set_message($this->t('Saved the %label CMIS connection.', [
-          '%label' => $cmis_connection_entity->label(),
+              '%label' => $cmis_connection_entity->label(),
         ]));
     }
     $form_state->setRedirectUrl($cmis_connection_entity->urlInfo('collection'));

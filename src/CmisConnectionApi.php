@@ -87,7 +87,12 @@ class CmisConnectionApi {
       // Load CMIS using classes if composer not able to install them
       // to root vendor folder because guzzle 5 dependency.
       $path = drupal_get_path('module', 'cmis');
-      require_once($path . '/vendor/autoload.php');
+      if (file_exists($path . '/vendor/autoload.php')) {
+        require_once($path . '/vendor/autoload.php');
+      }
+      else {
+        throw new \Exception('Php CMIS Client library is not properly installed.');
+      }
     }
   }
 
