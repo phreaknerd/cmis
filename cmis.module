@@ -56,6 +56,7 @@ function cmis_theme() {
         'elements' => NULL,
         'header' => NULL,
         'breadcrumbs' => NULL,
+        'operations' => NULL,
       ],
       'template' => 'cmis-browser',
     ),
@@ -65,6 +66,14 @@ function cmis_theme() {
         'download' => NULL,
       ],
       'template' => 'cmis-content-properties',
+    ),
+    'cmis_object_delete_verify' => array(
+      'variables' => [
+        'title' => NULL,
+        'description' => NULL,
+        'link' => NULL,
+      ],
+      'template' => 'cmis-object-delete-verify',
     ),
   );
 }
@@ -150,6 +159,6 @@ function _cmis_get_property($key, $property) {
     }
     return implode(', ', $values);
   }
-  
+
   return '';
 }

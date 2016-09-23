@@ -245,8 +245,47 @@ class CmisConnectionApi {
     if (empty($id)) {
       return NULL;
     }
-    $object = $this->session->getObject($this->session->createObjectId($id));
-    return $object;
+
+    if (!empty($this->validObjectId($id) || !empty($this->validObjectId($id, 'cmis:document')))) {
+      $cid = $this->session->createObjectId($id);
+      $object = $this->session->getObject($cid);
+
+      return $object;
+    }
+    
+    return NULL;
+  }
+
+  /**
+   * Check the id is valid object.
+   *
+   * @param string $id
+   * @param string $type
+   *
+   * @return object
+   *     the result object or empty array
+   */
+  public function validObjectId($id, $type = 'cmis:folder') {
+    $query = "SELECT * FROM $type WHERE cmis:objectId='$id'";
+    $result = $this->session->query($query);
+
+    return $result;
+  }
+  
+  /**
+   * Check the name is valid object.
+   *
+   * @param string $name
+   * @param string $type
+   *
+   * @return object
+   *     the result object or empty array
+   */
+  public function validObjectName($name, $type = 'cmis:folder') {
+    $query = "SELECT * FROM $type WHERE cmis:name='$name'";
+    $result = $this->session->query($query);
+
+    return $result;
   }
 
 }

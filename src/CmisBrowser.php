@@ -133,10 +133,8 @@ class CmisBrowser {
       $headers = [
         'Cache-Control' => 'no-cache, must-revalidate',
         'Content-type' => $mime,
+        'Content-Disposition' => 'attachment; filename="' . $this->current->getName() . '"',
       ];
-      if ($mime != 'text/html') {
-        $headers['Content-Disposition'] = 'attachment; filename="' . $this->current->getName() . '"';
-      }
       $response = new Response($content, 200, $headers);
       $response->send();
 
@@ -202,6 +200,15 @@ class CmisBrowser {
   }
 
   /**
+   * Get current object.
+   * 
+   * @return object
+   */
+  public function getCurrent() {
+    return $this->current;
+  }
+
+  /**
    * Get connection.
    *
    * @return object
@@ -245,13 +252,57 @@ class CmisBrowser {
         '#header' => $table_header,
         '#elements' => $this->data,
         '#breadcrumbs' => $this->breadcrumbs,
-        //'#cache' => $this->cacheable,
+        '#operations' => $this->prepareOperations(),
+          //'#cache' => $this->cacheable,
       ];
 
       return $browse;
     }
 
     return [];
+  }
+
+  /**
+   * Prepare operation links.
+   *
+   * @return string
+   */
+  private function prepareOperations() {
+    $routes = [
+      '/cmis/browser-create-folder/' => t('Create folder'),
+      '/cmis/browser-upload-document/' => t('Add document'),
+    ];
+
+    $links = [];
+    foreach ($routes as $route => $title) {
+      $url = \Drupal\Core\Url::fromUserInput($route . $this->config . '/' . $this->current->getId());
+      $link_options = array(
+        'attributes' => array(
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => \Drupal\Component\Serialization\Json::encode([
+            'height' => 400,
+            'width' => 700
+          ]),
+        ),
+      );
+      $url->setOptions($link_options);
+      $path = \Drupal\Core\Link::fromTextAndUrl($title, $url)->toRenderable();
+      $links[] = [
+        '#markup' => render($path),
+        '#wrapper_attributes' => [
+          'class' => ['object-properties']
+        ],
+      ];
+    }
+
+    $list = [
+      '#theme' => 'item_list',
+      '#items' => $links,
+      '#type' => 'ul',
+    ];
+
+    return render($list);
   }
 
   /**
@@ -291,7 +342,7 @@ class CmisBrowser {
           $element = [
             '#theme' => 'cmis_browser_other_item',
             '#element' => $name,
-            //'#cache' => $this->cacheable,
+              //'#cache' => $this->cacheable,
           ];
           $this->data[] = [render($element)];
       }
@@ -319,50 +370,18 @@ class CmisBrowser {
     }
 
     $mime_type = '';
-    $link = '';
+    $operations = '';
     if ($theme == 'cmis_browser_document_item') {
-      $mime_type = $children->getContentStreamMimeType();
-      if ($this->popup) {
-        $url = \Drupal\Core\Url::fromUserInput('/');
-        $link_options = array(
-          'attributes' => array(
-            'class' => array(
-              'cmis-field-insert',
-            ),
-            'id' => $children->getProperty('cmis:objectId')->getFirstValue(),
-            'name' => $data,
-          ),
-        );
-        $url->setOptions($link_options);
-        $path = \Drupal\Core\Link::fromTextAndUrl(t('Choose'), $url)->toRenderable();
-        $link = render($path);
-      }
-
-      $url = \Drupal\Core\Url::fromUserInput('/cmis/document/' . $this->config . '/' . $id);
-      $path = \Drupal\Core\Link::fromTextAndUrl($data, $url)->toRenderable();
-      $data = render($path);
+      $this->prepareDocumentElement($children, $data, $operations, $id);
     }
     if (!$this->popup) {
-      $url = \Drupal\Core\Url::fromUserInput('/cmis/object-properties/' . $this->config . '/' . $children->getId());
-      $link_options = array(
-        'attributes' => array(
-          'class' => ['use-ajax'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => \Drupal\Component\Serialization\Json::encode([
-            'height' => 400,
-            'width' => 700
-          ]),
-        ),
-      );
-      $url->setOptions($link_options);
-      $path = \Drupal\Core\Link::fromTextAndUrl(t('Properties'), $url)->toRenderable();
-      $link = render($path);
+      $this->preparePropertiesLink($children, $operations);
     }
 
     $element = [
       '#theme' => $theme,
       '#element' => $data,
-      //'#cache' => $this->cacheable,
+        //'#cache' => $this->cacheable,
     ];
 
     $details = [
@@ -370,7 +389,7 @@ class CmisBrowser {
       '#title' => $title,
       '#mime_type' => $mime_type,
       '#size' => number_format($size, 0, '', ' '),
-      //'#cache' => $this->cacheable,
+        //'#cache' => $this->cacheable,
     ];
 
     $this->data[] = [
@@ -379,8 +398,94 @@ class CmisBrowser {
       $author,
       $created,
       $description,
-      $link
+      $operations
     ];
+  }
+
+  /**
+   * 
+   * @param type $children
+   * @param type $data
+   * @param type $operations
+   * @param type $id
+   */
+  private function prepareDocumentElement($children, &$data, &$operations, $id) {
+    $mime_type = $children->getContentStreamMimeType();
+    if ($this->popup) {
+      $url = \Drupal\Core\Url::fromUserInput('/');
+      $link_options = array(
+        'attributes' => array(
+          'class' => array(
+            'cmis-field-insert',
+          ),
+          'id' => $children->getProperty('cmis:objectId')->getFirstValue(),
+          'name' => $data,
+        ),
+      );
+      $url->setOptions($link_options);
+      $path = \Drupal\Core\Link::fromTextAndUrl(t('Choose'), $url)->toRenderable();
+      $operations = render($path);
+    }
+
+    $url = \Drupal\Core\Url::fromUserInput('/cmis/document/' . $this->config . '/' . $id);
+    $path = \Drupal\Core\Link::fromTextAndUrl($data, $url)->toRenderable();
+    $data = ['#markup' => render($path)];
+  }
+
+  /**
+   * 
+   * @param type $children
+   * @param type $operations
+   */
+  private function preparePropertiesLink($children, &$operations) {
+    $url = \Drupal\Core\Url::fromUserInput('/cmis/object-properties/' . $this->config . '/' . $children->getId());
+    $link_options = array(
+      'attributes' => array(
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => \Drupal\Component\Serialization\Json::encode([
+          'height' => 400,
+          'width' => 700
+        ]),
+      ),
+    );
+    $url->setOptions($link_options);
+    $path = \Drupal\Core\Link::fromTextAndUrl(t('Properties'), $url)->toRenderable();
+    $links[] = [
+      '#markup' => render($path),
+      '#wrapper_attributes' => [
+        'class' => ['object-properties']
+      ],
+    ];
+
+    $url = \Drupal\Core\Url::fromUserInput('/cmis/object-delete-verify/' . $this->config . '/' . $children->getId());
+    $link_options = array(
+      'attributes' => array(
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => \Drupal\Component\Serialization\Json::encode([
+          'height' => 120,
+          'width' => 600,
+        ]),
+      ),
+      'query' => ['parent' => $this->current->getId()],
+    );
+    $url->setOptions($link_options);
+    $path = \Drupal\Core\Link::fromTextAndUrl(t('Delete'), $url)->toRenderable();
+    $links[] = [
+      '#markup' => render($path),
+      '#wrapper_attributes' => [
+        'class' => ['object-delete']
+      ],
+    ];
+
+    $list = [
+      '#theme' => 'item_list',
+      '#items' => $links,
+      '#type' => 'ul',
+    ];
+
+    $operations = render($list);
   }
 
   /**
