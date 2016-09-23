@@ -403,7 +403,8 @@ class CmisBrowser {
   }
 
   /**
-   * 
+   * Prepare document element.
+   *
    * @param type $children
    * @param type $data
    * @param type $operations
@@ -433,7 +434,8 @@ class CmisBrowser {
   }
 
   /**
-   * 
+   * Prepare properties link.
+   *
    * @param type $children
    * @param type $operations
    */

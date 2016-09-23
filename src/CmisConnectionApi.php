@@ -252,7 +252,7 @@ class CmisConnectionApi {
 
       return $object;
     }
-    
+
     return NULL;
   }
 
@@ -265,13 +265,17 @@ class CmisConnectionApi {
    * @return object
    *     the result object or empty array
    */
-  public function validObjectId($id, $type = 'cmis:folder') {
+  public function validObjectId($id, $type = 'cmis:folder', $parentId = '') {
     $query = "SELECT * FROM $type WHERE cmis:objectId='$id'";
+    if (!empty($parentId)) {
+      $query .= " and IN_FOLDER('$parentId')";
+    }
+
     $result = $this->session->query($query);
 
     return $result;
   }
-  
+
   /**
    * Check the name is valid object.
    *
@@ -281,8 +285,11 @@ class CmisConnectionApi {
    * @return object
    *     the result object or empty array
    */
-  public function validObjectName($name, $type = 'cmis:folder') {
+  public function validObjectName($name, $type = 'cmis:folder', $parentId = '') {
     $query = "SELECT * FROM $type WHERE cmis:name='$name'";
+    if (!empty($parentId)) {
+      $query .= " and IN_FOLDER('$parentId')";
+    }
     $result = $this->session->query($query);
 
     return $result;

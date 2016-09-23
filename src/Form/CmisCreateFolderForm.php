@@ -63,13 +63,13 @@ class CmisCreateFolderForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
+    $form_state->setRedirect(
+        'cmis.cmis_repository_controller_browser', ['config' => $values['config'], 'folder_id' => $values['folder_id']]
+    );
     if (!empty($values['folder_name'])) {
       $repository = new \Drupal\cmis\Controller\CmisRepositoryController($values['config'], $values['folder_id']);
-      if (!empty($repository->getBrowser()->getConnection()->validObjectName($values['folder_name']))) {
+      if (!empty($repository->getBrowser()->getConnection()->validObjectName($values['folder_name'], 'cmis:folder', $values['folder_id']))) {
         drupal_set_message($this->t("The folder name @folder_name exists in folder.", ['@folder_name' => $values['folder_name']]), 'warning');
-        $form_state->setRedirect(
-            'cmis.cmis_repository_controller_browser', ['config' => $values['config'], 'folder_id' => $values['folder_id']]
-        );
         return;
       }
       $session = $repository->getBrowser()->getConnection()->getSession();
@@ -80,14 +80,21 @@ class CmisCreateFolderForm extends FormBase {
       if (!empty($values['folder_description'])) {
         $properties[\Dkd\PhpCmis\PropertyIds::DESCRIPTION] = $values['folder_description'];
       }
-      $session->createFolder(
-          $properties, $session->createObjectId($values['folder_id'])
-      );
-    }
 
-    $form_state->setRedirect(
-        'cmis.cmis_repository_controller_browser', ['config' => $values['config'], 'folder_id' => $values['folder_id']]
-    );
+      try {
+        $session->createFolder(
+            $properties, $session->createObjectId($values['folder_id'])
+        );
+        drupal_set_message(
+            $this->t("The folder name @folder_name has been created.", ['@folder_name' => $values['folder_name']])
+        );
+      }
+      catch (Exception $exc) {
+        drupal_set_message(
+            $this->t("The folder name @folder_name couldn't create.", ['@folder_name' => $values['folder_name']]), 'warning'
+        );
+      }
+    }
   }
 
 }
