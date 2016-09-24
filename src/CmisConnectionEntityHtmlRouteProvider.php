@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\CmisConnectionEntityHtmlRouteProvider.
- */
-
 namespace Drupal\cmis;
 
 use Drupal\Core\Entity\EntityTypeInterface;

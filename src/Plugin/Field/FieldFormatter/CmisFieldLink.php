@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\Plugin\Field\FieldFormatter\CmisFieldLink.
- */
-
 namespace Drupal\cmis\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;

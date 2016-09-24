@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\CmisConnectionEntityListBuilder.
- */
-
 namespace Drupal\cmis;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains cmis.module..
+ * Contains cmis.module.
  */
 use Drupal\Core\Routing\RouteMatchInterface;
 

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\Form\CmisConnectionEntityForm.
- */
-
 namespace Drupal\cmis\Form;
 
 use Drupal\Core\Entity\EntityInterface;

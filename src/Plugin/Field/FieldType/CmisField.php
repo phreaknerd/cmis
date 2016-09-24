@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\Plugin\Field\FieldType\CmisField.
- */
-
 namespace Drupal\cmis\Plugin\Field\FieldType;
 
 use Drupal\Component\Utility\Random;

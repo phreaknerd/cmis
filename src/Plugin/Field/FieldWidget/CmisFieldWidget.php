@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\Plugin\Field\FieldWidget\CmisFieldWidget.
- */
-
 namespace Drupal\cmis\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\FieldItemListInterface;

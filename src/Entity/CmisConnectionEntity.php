@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\Entity\CmisConnectionEntity.
- */
-
 namespace Drupal\cmis\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;

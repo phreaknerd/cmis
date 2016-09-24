@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cmis\Form\CmisConnectionEntityDeleteForm.
- */
-
 namespace Drupal\cmis\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
