@@ -235,7 +235,7 @@ class CmisBrowser {
   public function browse($reset = FALSE) {
     if ($this->connection && !empty($this->current)) {
 
-      $this->setBreadcrumbs($this->current);
+      $this->setBreadcrumbs($this->current, 'last');
       $this->printFolderContent($this->current);
 
       $table_header = array(
@@ -253,7 +253,12 @@ class CmisBrowser {
         '#elements' => $this->data,
         '#breadcrumbs' => $this->breadcrumbs,
         '#operations' => $this->prepareOperations(),
-          //'#cache' => $this->cacheable,
+        //'#cache' => $this->cacheable,
+        '#attached' => [
+          'library' => [
+            'cmis/cmis-browser',
+          ],
+        ],
       ];
 
       return $browse;
@@ -495,12 +500,15 @@ class CmisBrowser {
    *
    * @param type $folder
    */
-  protected function setBreadcrumbs($folder) {
+  protected function setBreadcrumbs($folder, $class = '') {
     $name = $folder->getName();
     $id = $folder->getId();
-    $this->setBreadcrumb($name, $id);
+    $this->setBreadcrumb($name, $id, $class);
     if ($parent = $folder->getFolderParent()) {
       $this->setBreadcrumbs($parent);
+    }
+    else {
+      $this->breadcrumbs[0]['#wrapper_attributes']['class'] = ['first'];
     }
   }
 
@@ -510,7 +518,7 @@ class CmisBrowser {
    * @param type $label
    * @param type $name
    */
-  protected function setBreadcrumb($label, $id = '') {
+  protected function setBreadcrumb($label, $id = '', $class) {
     $path = '/cmis/browser/nojs/' . $this->config;
     if (!empty($id)) {
       $path .= '/' . $id;
@@ -524,7 +532,15 @@ class CmisBrowser {
       ),
     );
     $url->setOptions($link_options);
-    array_unshift($this->breadcrumbs, \Drupal\Core\Link::fromTextAndUrl($label, $url)->toRenderable());
+
+    $item = [
+      'value' => \Drupal\Core\Link::fromTextAndUrl($label, $url)->toRenderable(),
+      '#wrapper_attributes' => [
+        'class' => [$class],
+      ],
+    ];
+
+    array_unshift($this->breadcrumbs, $item);
   }
 
 }

@@ -1,3 +1,8 @@
 cmis-field:
   js:
     js/cmis_field.js: {}
+
+cmis-browser:
+  css:
+    theme:
+      css/cmis_browser.css: {}

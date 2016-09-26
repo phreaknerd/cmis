@@ -39,7 +39,7 @@ class CmisRepositoryController extends ControllerBase {
     if (empty($this->browser)) {
       $this->initBrowser($config, $folder_id);
     }
-    if (!empty($this->browser)) {
+    if (!empty($this->browser->getCurrent())) {
       $cacheable = $this->browser->getConnection()->getConfig()->getCmisCacheable();
       return $this->browser->browse(!$cacheable);
     }
@@ -58,7 +58,9 @@ class CmisRepositoryController extends ControllerBase {
     if (empty($this->browser)) {
       $this->initBrowser($config, $document_id);
     }
-    return $this->browser->getDocumentProperties();
+    if (!empty($this->browser->getCurrent())) {
+      return $this->browser->getDocumentProperties();
+    }
   }
 
   /**
