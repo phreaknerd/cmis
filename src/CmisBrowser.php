@@ -6,6 +6,7 @@ use Drupal\cmis\CmisConnectionApi;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Symfony\Component\HttpFoundation\Response;
+use Drupal\cmis\CmisElement;
 
 /**
  * Description of CmisBrowser
@@ -316,183 +317,12 @@ class CmisBrowser {
    * @param \Dkd\PhpCmis\Data\FolderInterface $folder
    */
   protected function printFolderContent(\Dkd\PhpCmis\Data\FolderInterface $folder) {
+    $root = $this->connection->getRootFolder();
+    $element = new CmisElement($this->config, $this->popup, $this->current, '', $root->getId());
     foreach ($folder->getChildren() as $children) {
-      $type_id = $children->getBaseTypeId()->__toString();
-      $name = $children->getName();
-      $id = $children->getId();
-      switch ($type_id) {
-        case 'cmis:folder':
-          $url = \Drupal\Core\Url::fromUserInput('/cmis/browser/nojs/' . $this->config . '/' . $id);
-          $link_options = array(
-            'attributes' => array(
-              'class' => array(
-                'use-ajax',
-              ),
-            ),
-          );
-
-          if ($this->popup) {
-            $link_options['query'] = ['type' => 'popup'];
-          }
-
-          $url->setOptions($link_options);
-
-          $link = \Drupal\Core\Link::fromTextAndUrl($name, $url)->toRenderable();
-          $this->setElement($children, 'cmis_browser_folder_item', $link);
-          break;
-        case 'cmis:document':
-          $this->setElement($children, 'cmis_browser_document_item', $name, $id);
-          break;
-        default:
-          $element = [
-            '#theme' => 'cmis_browser_other_item',
-            '#element' => $name,
-              //'#cache' => $this->cacheable,
-          ];
-          $this->data[] = [render($element)];
-      }
+      $element->setElement('browser', $children);
+      $this->data[] = $element->getDAta();
     }
-  }
-
-  /**
-   * Set element to render array.
-   * 
-   * @param type $children
-   */
-  protected function setElement($children, $theme, $data, $id = '') {
-    $author = $children->getCreatedBy();
-    $created = $children->getCreationDate()->format('Y-m-d H:i:s');
-    $description = $children->getDescription();
-
-    $title = '';
-    if ($title_property = $children->getProperty('cm:title')) {
-      $title = $title_property->getFirstValue();
-    }
-
-    $size = 0;
-    if ($size_property = $children->getProperty('cmis:contentStreamLength')) {
-      $size = $size_property->getFirstValue();
-    }
-
-    $mime_type = '';
-    $operations = '';
-    if ($theme == 'cmis_browser_document_item') {
-      $this->prepareDocumentElement($children, $data, $operations, $id);
-    }
-    if (!$this->popup) {
-      $this->preparePropertiesLink($children, $operations);
-    }
-
-    $element = [
-      '#theme' => $theme,
-      '#element' => $data,
-        //'#cache' => $this->cacheable,
-    ];
-
-    $details = [
-      '#theme' => 'cmis_browser_document_details',
-      '#title' => $title,
-      '#mime_type' => $mime_type,
-      '#size' => number_format($size, 0, '', ' '),
-        //'#cache' => $this->cacheable,
-    ];
-
-    $this->data[] = [
-      render($element),
-      render($details),
-      $author,
-      $created,
-      $description,
-      $operations
-    ];
-  }
-
-  /**
-   * Prepare document element.
-   *
-   * @param type $children
-   * @param type $data
-   * @param type $operations
-   * @param type $id
-   */
-  private function prepareDocumentElement($children, &$data, &$operations, $id) {
-    $mime_type = $children->getContentStreamMimeType();
-    if ($this->popup) {
-      $url = \Drupal\Core\Url::fromUserInput('/');
-      $link_options = array(
-        'attributes' => array(
-          'class' => array(
-            'cmis-field-insert',
-          ),
-          'id' => $children->getProperty('cmis:objectId')->getFirstValue(),
-          'name' => $data,
-        ),
-      );
-      $url->setOptions($link_options);
-      $path = \Drupal\Core\Link::fromTextAndUrl(t('Choose'), $url)->toRenderable();
-      $operations = render($path);
-    }
-
-    $url = \Drupal\Core\Url::fromUserInput('/cmis/document/' . $this->config . '/' . $id);
-    $path = \Drupal\Core\Link::fromTextAndUrl($data, $url)->toRenderable();
-    $data = ['#markup' => render($path)];
-  }
-
-  /**
-   * Prepare properties link.
-   *
-   * @param type $children
-   * @param type $operations
-   */
-  private function preparePropertiesLink($children, &$operations) {
-    $url = \Drupal\Core\Url::fromUserInput('/cmis/object-properties/' . $this->config . '/' . $children->getId());
-    $link_options = array(
-      'attributes' => array(
-        'class' => ['use-ajax'],
-        'data-dialog-type' => 'modal',
-        'data-dialog-options' => \Drupal\Component\Serialization\Json::encode([
-          'height' => 400,
-          'width' => 700
-        ]),
-      ),
-    );
-    $url->setOptions($link_options);
-    $path = \Drupal\Core\Link::fromTextAndUrl(t('Properties'), $url)->toRenderable();
-    $links[] = [
-      '#markup' => render($path),
-      '#wrapper_attributes' => [
-        'class' => ['object-properties']
-      ],
-    ];
-
-    $url = \Drupal\Core\Url::fromUserInput('/cmis/object-delete-verify/' . $this->config . '/' . $children->getId());
-    $link_options = array(
-      'attributes' => array(
-        'class' => ['use-ajax'],
-        'data-dialog-type' => 'modal',
-        'data-dialog-options' => \Drupal\Component\Serialization\Json::encode([
-          'height' => 120,
-          'width' => 600,
-        ]),
-      ),
-      'query' => ['parent' => $this->current->getId()],
-    );
-    $url->setOptions($link_options);
-    $path = \Drupal\Core\Link::fromTextAndUrl(t('Delete'), $url)->toRenderable();
-    $links[] = [
-      '#markup' => render($path),
-      '#wrapper_attributes' => [
-        'class' => ['object-delete']
-      ],
-    ];
-
-    $list = [
-      '#theme' => 'item_list',
-      '#items' => $links,
-      '#type' => 'ul',
-    ];
-
-    $operations = render($list);
   }
 
   /**
@@ -531,6 +361,9 @@ class CmisBrowser {
         ),
       ),
     );
+    if ($this->popup) {
+      $link_options['query'] = ['type' => 'popup'];
+    }
     $url->setOptions($link_options);
 
     $item = [

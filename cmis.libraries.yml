@@ -6,3 +6,8 @@ cmis-browser:
   css:
     theme:
       css/cmis_browser.css: {}
+
+cmis-query:
+  css:
+    theme:
+      css/cmis_query.css: {}

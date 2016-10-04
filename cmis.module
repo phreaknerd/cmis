@@ -75,6 +75,13 @@ function cmis_theme() {
       ],
       'template' => 'cmis-object-delete-verify',
     ),
+    'cmis_query' => array(
+      'variables' => [
+        'elements' => NULL,
+        'header' => NULL,
+      ],
+      'template' => 'cmis-query',
+    ),
   );
 }
 
@@ -97,6 +104,7 @@ function template_preprocess_cmis_browser(&$variables) {
       '#theme' => 'table',
       '#header' => $variables['header'],
       '#rows' => $variables['elements'],
+      '#sticky' => TRUE,
     );
 
     $variables['table'] = render($table);

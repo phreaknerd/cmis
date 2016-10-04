@@ -13,6 +13,7 @@ use Drupal\cmis\CmisBrowser;
 class CmisRepositoryController extends ControllerBase {
 
   private $browser;
+  private $connection;
 
   /**
    * Construct.
@@ -70,49 +71,54 @@ class CmisRepositoryController extends ControllerBase {
    * @param string $document_id
    */
   public function objectDeleteVerify($config = '', $object_id = '') {
-    if ($parent = \Drupal::request()->query->get('parent')) {
-      if (empty($this->browser)) {
-        $this->initBrowser($config, $object_id);
-      }
-      if ($this->browser->getConnection() && $current = $this->browser->getCurrent()) {
-        $type = $current->getBaseTypeId()->__toString();
-        $name = $current->getName();
-
-
-        $args = [
-          '@type' => str_replace('cmis:', '', $type),
-          '@name' => $name,
-        ];
-
-        $url = \Drupal\Core\Url::fromUserInput('/cmis/object-delete/' . $config . '/' . $object_id);
-        $link_options = [];
-        if (isset($parent)) {
-          $link_options['query'] = ['parent' => $parent];
+    $parameters = \Drupal::request()->query->all();
+    unset($parameters['_wrapper_format']);
+    $type = '';
+    $name = '';
+    if (!empty($parameters['type']) && !empty($config) && !empty($object_id) &&
+        (!empty($parameters['parent']) || !empty($parameters['query_string']))) {
+      $this->setConnection($config);
+      if ($this->connection) {
+        if ($current = $this->connection->getObjectById($object_id)) {
+          $type = $current->getBaseTypeId()->__toString();
+          $name = $current->getName();
         }
-        $url->setOptions($link_options);
-        $path = \Drupal\Core\Link::fromTextAndUrl(t('Delete'), $url)->toRenderable();
-        $link = render($path);
-
-        return [
-          '#theme' => 'cmis_object_delete_verify',
-          '#title' => $this->t('Are you sure you want to delete @type name @name', $args),
-          '#description' => $this->t('This action cannot be undone.'),
-          '#link' => $link,
-        ];
+        else {
+          return [
+            '#theme' => 'cmis_object_delete_verify',
+            '#title' => $this->t("Object can't delete"),
+            '#description' => $this->t('Object not found in repository.'),
+            '#link' => '',
+          ];
+        }
       }
+    }
+    else {
       return [
         '#theme' => 'cmis_object_delete_verify',
         '#title' => $this->t("Object can't delete"),
-        '#description' => $this->t('Object not found in repository.'),
+        '#description' => $this->t('Argument or parameter missed.'),
         '#link' => '',
       ];
     }
 
+    $args = [
+      '@type' => str_replace('cmis:', '', $type),
+      '@name' => $name,
+    ];
+
+    $url = \Drupal\Core\Url::fromUserInput('/cmis/object-delete/' . $config . '/' . $object_id);
+
+    $link_options = ['query' => $parameters];
+    $url->setOptions($link_options);
+    $path = \Drupal\Core\Link::fromTextAndUrl(t('Delete'), $url)->toRenderable();
+    $link = render($path);
+
     return [
       '#theme' => 'cmis_object_delete_verify',
-      '#title' => $this->t("Object can't delete"),
-      '#description' => $this->t('Without parent object definition can not delete the object.'),
-      '#link' => '',
+      '#title' => $this->t('Are you sure you want to delete @type name @name', $args),
+      '#description' => $this->t('This action cannot be undone.'),
+      '#link' => $link,
     ];
   }
 
@@ -123,29 +129,76 @@ class CmisRepositoryController extends ControllerBase {
    * @param string $document_id
    */
   public function objectDelete($config = '', $object_id = '') {
-    if ($parent = \Drupal::request()->query->get('parent')) {
-      if (empty($this->browser)) {
-        $this->initBrowser($config, $object_id);
+    $parameters = \Drupal::request()->query->all();
+    $type = '';
+    $name = '';
+
+    if (!empty($parameters['type']) && !empty($config) && !empty($object_id) &&
+        (!empty($parameters['parent']) || !empty($parameters['query_string']))) {
+      switch ($parameters['type']) {
+        case 'browser':
+          $redirect = $this->redirect('cmis.cmis_repository_controller_browser', ['config' => $config]);
+          break;
+        case 'query':
+          $parameters += ['config' => $config];
+          $redirect = $this->redirect('cmis.cmis_query_form_callback', [], ['query' => $parameters]);
+          break;
+        default:
+          // Back to frontpage if not browser or not query.
+          $redirect = new \Symfony\Component\HttpFoundation\RedirectResponse('/');
       }
-      if ($this->browser->getConnection() && $current = $this->browser->getCurrent()) {
-        $object = $this->browser->getConnection()->getSession()->getObject($current);
-        $type = $object->getBaseTypeId()->__toString();
-        $name = $object->getName();
 
-        $args = [
-          '@type' => str_replace('cmis:', '', $type),
-          '@name' => $name,
-        ];
+      $this->setConnection($config);
+      if ($this->connection) {
+        $root = $this->connection->getRootFolder();
+        if ($root->getId() != $object_id && $current = $this->connection->getObjectById($object_id)) {
+          // Exists object and not root folder.
+          $type = $current->getBaseTypeId()->__toString();
+          $name = $current->getName();
 
-        $object->delete(TRUE);
+          $args = [
+            '@type' => str_replace('cmis:', '', $type),
+            '@name' => $name,
+          ];
 
-        drupal_set_message($this->t('The @type name @name has now been deleted.', $args));
-        return $this->redirect('cmis.cmis_repository_controller_browser', ['config' => $config, 'folder_id' => $parent]);
+          $current->delete(TRUE);
+
+          drupal_set_message($this->t('The @type name @name has now been deleted.', $args));
+          if ($parameters['type'] == 'browser') {
+            $redirect = $this->redirect('cmis.cmis_repository_controller_browser', ['config' => $config, 'folder_id' => $parameters['parent']]);
+          }
+        }
+        else {
+          if ($root->getId() != $object_id) {
+            drupal_set_message($this->t("Could not delete object. Object is not exists in repositoty."), 'warning');
+          }
+          else {
+            drupal_set_message($this->t("Could not delete root folder."), 'warning');
+          }
+        }
       }
     }
+    else {
+      drupal_set_message($this->t('Argument or parameter missed.'), 'warning');
+      // Back to frontpage.
+      $redirect = new \Symfony\Component\HttpFoundation\RedirectResponse('/');
+    }
 
-    drupal_set_message($this->t('Without parent object definition can not delete the object.'), 'warning');
-    return $this->redirect('cmis.cmis_repository_controller_browser', ['config' => $config]);
+    return $redirect;
+  }
+
+  /**
+   * Set connection.
+   *
+   * @param type $config
+   * @param type $object_id
+   */
+  private function setConnection($config = '') {
+    if (!empty($config)) {
+      if ($this->connection = new \Drupal\cmis\CmisConnectionApi($config)) {
+        $this->connection->setDefaultParameters();
+      }
+    }
   }
 
   /**
@@ -179,7 +232,7 @@ class CmisRepositoryController extends ControllerBase {
   public function getBrowser() {
     return $this->browser;
   }
-  
+
   /**
    * Prepare configure error.
    *

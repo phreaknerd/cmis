@@ -1,0 +1,19 @@
+.cmis-operations {
+    margin-bottom: 0.5em;
+    padding-bottom: 0.5em;
+    border-bottom: lightgrey solid 1px;
+}
+
+.browser-breadcrumbs li {
+    float: left;
+    margin-right: 5px;
+
+}
+
+.browser-breadcrumbs li:after {
+    content: ' > ';
+}
+
+.browser-breadcrumbs li.last:after {
+    content: '';
+}
