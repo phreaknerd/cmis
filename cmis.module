@@ -23,6 +23,19 @@ function cmis_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
+ * Implements hook_page_attachments().
+ *
+ * @param array $attachments
+ */
+function cmis_page_attachments(array &$attachments) {
+  if (!\Drupal::currentUser()->hasPermission('access content')) {
+    return;
+  }
+
+  $attachments['#attached']['library'][] = 'core/drupal.ajax';
+}
+
+/**
  * Implements hook_theme().
  */
 function cmis_theme() {
