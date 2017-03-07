@@ -1,0 +1,6 @@
+access cmis browser:
+  title: 'Access to cmis browser'
+  description: 'Allow access to cmis browser'
+access cmis operations:
+  title: 'Access to cmis operations'
+  description: 'Allow access to cmis operations'

@@ -28,11 +28,9 @@ function cmis_help($route_name, RouteMatchInterface $route_match) {
  * @param array $attachments
  */
 function cmis_page_attachments(array &$attachments) {
-  if (!\Drupal::currentUser()->hasPermission('access content')) {
-    return;
+  if (\Drupal::currentUser()->hasPermission('access cmis browser')) {
+    $attachments['#attached']['library'][] = 'core/drupal.ajax';
   }
-
-  $attachments['#attached']['library'][] = 'core/drupal.ajax';
 }
 
 /**

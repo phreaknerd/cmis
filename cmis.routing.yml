@@ -6,7 +6,7 @@ cmis.cmis_repository_controller_browser:
     folder_id: ''
     _title: 'CMIS Browser'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis browser'
 
 cmis.cmis_browser_ajax_callback:
   path: 'cmis/browser/ajax/{config}/{folder_id}'
@@ -16,7 +16,7 @@ cmis.cmis_browser_ajax_callback:
     folder_id: ''
     _title: 'CMIS Browser'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis browser'
 
 cmis.cmis_document_get_callback:
   path: 'cmis/document/{config}/{document_id}'
@@ -26,7 +26,7 @@ cmis.cmis_document_get_callback:
     document_id: ''
     _title: 'CMIS Browser'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis browser'
 
 cmis.cmis_object_properties_callback:
   path: '/cmis/object-properties/{config}/{document_id}'
@@ -36,7 +36,7 @@ cmis.cmis_object_properties_callback:
     document_id: ''
     _title: 'Document properties'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis browser'
 
 cmis.cmis_object_delete_verify:
   path: '/cmis/object-delete-verify/{config}/{object_id}'
@@ -46,7 +46,7 @@ cmis.cmis_object_delete_verify:
     object_id: ''
     _title: 'Object delete verify'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis operations'
 
 cmis.cmis_object_delete:
   path: '/cmis/object-delete/{config}/{object_id}'
@@ -56,7 +56,7 @@ cmis.cmis_object_delete:
     object_id: ''
     _title: 'Object delete'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis operations'
 
 cmis.cmis_query_form_callback:
   path: '/cmis/query'
@@ -64,7 +64,7 @@ cmis.cmis_query_form_callback:
     _form: '\Drupal\cmis\Form\CmisQueryForm'
     _title: 'CMIS query'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis browser'
 
 cmis.cmis_browser_create_folder_callback:
   path: '/cmis/browser-create-folder/{config}/{folder_id}'
@@ -74,7 +74,7 @@ cmis.cmis_browser_create_folder_callback:
     folder_id: ''
     _title: 'Create folder'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis operations'
 
 cmis.cmis_browser_upload_document_callback:
   path: '/cmis/browser-upload-document/{config}/{folder_id}'
@@ -84,4 +84,4 @@ cmis.cmis_browser_upload_document_callback:
     folder_id: ''
     _title: 'Upload document'
   requirements:
-    _permission: 'access content'
+    _permission: 'access cmis operations'

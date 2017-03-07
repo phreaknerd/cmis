@@ -274,6 +274,10 @@ class CmisBrowser {
    * @return string
    */
   private function prepareOperations() {
+    if (!\Drupal::currentUser()->hasPermission('access cmis operations')) {
+      return '';
+    }
+
     $routes = [
       '/cmis/browser-create-folder/' => t('Create folder'),
       '/cmis/browser-upload-document/' => t('Add document'),

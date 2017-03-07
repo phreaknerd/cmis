@@ -276,7 +276,8 @@ class CmisElement {
       ],
     ];
 
-    if ($this->rootId != $this->element->getId()) {
+    if ($this->rootId != $this->element->getId() &&
+        \Drupal::currentUser()->hasPermission('access cmis operations')) {
       $url = \Drupal\Core\Url::fromUserInput('/cmis/object-delete-verify/' . $this->config . '/' . $this->element->getId());
       $link_options = array(
         'attributes' => array(
