@@ -99,9 +99,9 @@ class CmisBrowser {
    */
   public function ajaxCall($config, $folder_id) {
     $this->init($config, $folder_id);
-    if ($this->connection && !empty($this->current)) {
+    if ($this->connection && !empty($this->current) && $browse = $this->browse()) {
       $response = new AjaxResponse();
-      $content = render($this->browse());
+      $content = render($browse);
       $response->addCommand(new HtmlCommand('#cmis-browser-wrapper', $content));
 
       return $response;

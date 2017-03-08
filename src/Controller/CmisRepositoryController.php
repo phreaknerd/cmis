@@ -21,7 +21,7 @@ class CmisRepositoryController extends ControllerBase {
    * @param string $config
    * @param string $folder_id
    */
-  public function __construct($config, $folder_id) {
+  public function __construct($config = '', $folder_id = '') {
     if (!empty($config) && !empty($folder_id)) {
       $this->initBrowser($config, $folder_id);
     }
