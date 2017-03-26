@@ -11,6 +11,6 @@
     "source": "http://cgit.drupalcode.org/cmis"
   },
   "require": {
-    "dkd/php-cmis": "^1.0"
+    "dkd/php-cmis": "dev-master"
   }
 }
