@@ -97,7 +97,7 @@ class CmisBrowser {
    * @param string $config
    * @param string $folder_id
    */
-  public function ajaxCall($config, $folder_id) {
+  public function ajaxCall($config = '', $folder_id = '') {
     $this->init($config, $folder_id);
     if ($this->connection && !empty($this->current) && $browse = $this->browse()) {
       $response = new AjaxResponse();

@@ -4,6 +4,8 @@ namespace Drupal\cmis;
 
 use Dkd\PhpCmis\Enum\BindingType;
 use Dkd\PhpCmis\SessionParameter;
+use Dkd\PhpCmis\DataObjects\ObjectId;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Description of CmisConnectionApi
@@ -121,16 +123,13 @@ class CmisConnectionApi {
    * Set Http invoker.
    */
   private function setHttpInvoker() {
-    $guzzle = [
-      'defaults' => [
-        'auth' => [
-          $this->config->getCmisUser(),
-          $this->config->getCmisPassword(),
-        ],
+    $auth = [
+      'auth' => [
+        $this->config->getCmisUser(),
+        $this->config->getCmisPassword(),
       ],
     ];
-
-    $this->httpInvoker = new \GuzzleHttp\Client($guzzle);
+    $this->httpInvoker = new \GuzzleHttp\Client($auth);
   }
 
   /**
@@ -266,12 +265,12 @@ class CmisConnectionApi {
    *     the result object or empty array
    */
   public function validObjectId($id, $type = 'cmis:folder', $parentId = '') {
-    $query = "SELECT * FROM $type WHERE cmis:objectId='$id'";
+    $where = "cmis:objectId='$id'";
     if (!empty($parentId)) {
-      $query .= " and IN_FOLDER('$parentId')";
+      $where .= " AND IN_FOLDER('$parentId')";
     }
 
-    $result = $this->session->query($query);
+    $result = $this->session->queryObjects($type, $where);
 
     return $result;
   }
